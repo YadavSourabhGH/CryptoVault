@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0B0E11;
+  --surface-1: #1E2026;
+  --surface-2: #2B2F36;
+  --surface-3: #363C45;
+  --border: #2B2F36;
+  --border-subtle: #1E2026;
+  --text-primary: #EAECEF;
+  --text-secondary: #848E9C;
+  --text-muted: #5E6673;
+  --accent-gold: #F0B90B;
+  --accent-gold-hover: #D4A408;
+  --accent-gold-dim: rgba(240,185,11,0.12);
+  --buy-green: #0ECB81;
+  --buy-green-dim: rgba(14,203,129,0.12);
+  --sell-red: #F6465D;
+  --sell-red-dim: rgba(246,70,93,0.12);
+  --chart-up: #0ECB81;
+  --chart-down: #F6465D;
+  --radius: 4px;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+body {
+  background-color: #0B0E11;
+  color: #EAECEF;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Custom monospaced formatting */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0E11;
+}
+::-webkit-scrollbar-thumb {
+  background: #2B2F36;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #363C45;
+}
+
+/* Custom animation keyframes if needed in standard CSS */
+@keyframes flashGreen {
+  0% { background-color: rgba(14,203,129,0.25); }
+  100% { background-color: transparent; }
+}
+
+@keyframes flashRed {
+  0% { background-color: rgba(246,70,93,0.25); }
+  100% { background-color: transparent; }
+}
+
+.flash-green {
+  animation: flashGreen 0.4s ease-out;
+}
+
+.flash-red {
+  animation: flashRed 0.4s ease-out;
+}
+
+/* Hide TradingView attribution logo and disable redirects */
+a[href*="tradingview.com"],
+div[class*="tv-"] a {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

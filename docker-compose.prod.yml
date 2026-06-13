@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: cryptovault-prod-api
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    # We do not expose port 4000 to the host/public for security;
+    # all traffic is proxied internally via the client's Nginx container.
+    expose:
+      - "4000"
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: cryptovault-prod-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - server

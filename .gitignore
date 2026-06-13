@@ -1,0 +1,20 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+web_modules/
+
+# Build outputs
+dist/
+build/
+.cache/
+
+# Local env files and private keys
+.env
+.env.local
+.env.production
+cryptovault.pem
+archive.tar.gz
+
+# OS files
+.DS_Store
+Thumbs.db
