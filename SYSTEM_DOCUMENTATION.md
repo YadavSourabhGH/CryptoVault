@@ -22,31 +22,7 @@
 
 The platform is designed using a decoupled Client-Server architecture separated by an Nginx reverse proxy.
 
-```
-                  ┌──────────────────────────────┐
-                  │        Public Clients        │
-                  │  (Browsers & Mobile Nodes)   │
-                  └──────────────┬───────────────┘
-                                 │ HTTP / WSS
-                                 ▼ (Port 80)
-                  ┌──────────────────────────────┐
-                  │    Docker Nginx Container    │
-                  │   (Static host + API Proxy)  │
-                  └─────┬──────────────────┬─────┘
-                        │                  │
-           Static Files │                  │ Proxy /api & /socket.io
-                        ▼                  ▼
-                  ┌──────────┐       ┌──────────┐
-                  │  Client  │       │  Server  │
-                  │ (React)  │       │ (NodeJS) │
-                  └──────────┘       └─────┬────┘
-                                           │ Mongoose (SSL)
-                                           ▼
-                                     ┌──────────┐
-                                     │ MongoDB  │
-                                     │  Atlas   │
-                                     └──────────┘
-```
+![CryptoVault Technology Stack Diagram](docs/assets/tech_stack_architecture.png)
 
 ### A. Client Side (Frontend)
 * **Core Engine**: React 18 with Vite compiler (bundling optimized ESModules in under 6 seconds).
@@ -74,29 +50,7 @@ The database schema is mapped using Mongoose schemas connecting directly to Mong
 
 ### Database Entities & Fields
 
-```
- ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
- │      User       │       │     Wallet      │       │   Transaction   │
- ├─────────────────┤       ├─────────────────┤       ├─────────────────┤
- │ _id             │◄─────┐│ _id             │◄─────┐│ _id             │
- │ name            │      └│ userId          │      └│ userId          │
- │ email           │       │ balances: {     │       │ type (DEPOSIT)  │
- │ password        │       │   BTC: {        │       │ asset (USDT)    │
- │ role            │       │     free        │       │ amount          │
- │ createdAt       │       │     locked      │       │ reference       │
- └─────────────────┘       │   }             │       └─────────────────┘
-                           │ }               │
- ┌─────────────────┐       └─────────────────┘       ┌─────────────────┐
- │      Order      │                                 │      Trade      │
- ├─────────────────┤                                 ├─────────────────┤
- │ _id             │◄───────────────────────────────┐│ _id             │
- │ userId          │                                └│ buyOrderId      │
- │ symbol          │◄───────────────────────────────┐│ sellOrderId     │
- │ side (BUY/SELL) │                                └│ price           │
- │ type (LIMIT)    │                                 │ quantity        │
- │ status          │                                 │ executedAt      │
- └─────────────────┘                                 └─────────────────┘
-```
+![CryptoVault Database Schema and ER Diagram](docs/assets/database_schema.png)
 
 #### 1. User Schema (`User`)
 Stores account access details and permission roles.
@@ -209,10 +163,10 @@ graph TD
 Below are the architectural diagrams deployed on your AWS EC2 instance:
 
 ### A. High-Fidelity Diagram
-![CryptoVault Single-Instance EC2 Cloud Architecture Diagram](/Users/sourabhyadav/.gemini/antigravity-ide/brain/004e9116-6931-4641-bcc5-83b9cbeffc9f/cloud_architecture_diagram_1781448125606.png)
+![CryptoVault Single-Instance EC2 Cloud Architecture Diagram](docs/assets/cloud_architecture.png)
 
 ### B. Low-Fidelity Diagram
-![CryptoVault Single-Instance EC2 Low-Fidelity Diagram](/Users/sourabhyadav/.gemini/antigravity-ide/brain/004e9116-6931-4641-bcc5-83b9cbeffc9f/low_fidelity_architecture_1781448296660.png)
+![CryptoVault Single-Instance EC2 Low-Fidelity Diagram](docs/assets/low_fidelity_architecture.png)
 
 ---
 
