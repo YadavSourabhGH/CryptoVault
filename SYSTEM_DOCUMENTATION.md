@@ -1,74 +1,164 @@
-# CryptoVault Comprehensive System Documentation
-
-Welcome to the comprehensive system documentation for **CryptoVault**, a high-fidelity cryptocurrency paper trading exchange simulator. This document aggregates all aspects of the platform: tech stack, directory layouts, operational flows, cloud architecture diagrams, step-by-step deployment instructions, and financial pricing models.
+# CryptoVault: Core Architecture, Deployment Blueprint & Business Analysis
 
 ---
 
-## 1. Technology Stack
-
-### Client (Frontend)
-* **Core Framework**: React 18 & Vite (for lightning-fast hot module replacement and production builds).
-* **State Management**: Zustand (lightweight, hook-based global store for user authentication, orders, and market tickers).
-* **Styling**: TailwindCSS (custom theme variables configured for dark-mode trading UI).
-* **Charting**: Lightweight Charts (Financial charting library by TradingView for rendering OHLC candlestick graphs).
-* **Icons**: Lucide React.
-* **Real-time Sync**: Socket.io-client (handles real-time connections to the server for live order book and tick data updates).
-* **API Requests**: Axios (configured with interceptors to automatically inject JWT authentication headers).
-
-### Server (Backend)
-* **Runtime & Framework**: Node.js & Express.
-* **Database Mapping**: Mongoose (ODM mapping object structures to MongoDB Atlas).
-* **WebSockets**: Socket.io (pushes real-time tick updates, order book changes, and execution updates).
-* **Security & Auth**: `bcryptjs` (password hashing), JSON Web Tokens (`jsonwebtoken`), and `express-rate-limit` (DDoS prevention).
-* **Order Engine Services**:
-  - `MatchingEngine`: Decoupled order matching mechanism for processing limit and market order books.
-  - `PriceEngine`: Periodically updates asset rates based on simulated volatilities.
-  - `MarketMaker`: Simulates market liquidity by continuously placing bids/asks.
-
-### DevOps & Hosting
-* **Orchestration**: Docker & Docker Compose.
-* **Web Server / Proxy**: Nginx (serves client files statically and proxies `/api` and `/socket.io` internally).
-* **Cloud Platform**: AWS EC2 instance (`t3.medium`, Amazon Linux 2 / Ubuntu).
-* **Managed Database**: MongoDB Atlas (external cloud database).
+### 🎓 Academic Project Profile
+| Field | Details |
+| :--- | :--- |
+| **Student Name** | **Sourabh Dinesh Yadav** |
+| **Roll Number** | **150096724013** |
+| **Cohort** | **MZ** |
+| **Academic Batch** | **2024-28** |
 
 ---
 
-## 2. Directory Layout & File Structure
+## 1. Executive Summary & Project Scope
 
-```text
-CryptoVault/
-├── DEPLOYMENT_COMMANDS.md     # Quick command checklist for deployments
-├── PRICING_ANALYSIS.md        # Cost & financial analysis
-├── PRICING_ANALYSIS.pdf       # Compiled PDF report
-├── SYSTEM_DOCUMENTATION.md    # [This File] Main documentation blueprint
-├── docker-compose.prod.yml    # Production compose stack (excludes local DB)
-├── docker-compose.yml         # Local development compose stack (includes Mongo container)
-├── client/
-│   ├── Dockerfile             # Client image packaging (copies pre-built dist)
-│   ├── nginx.conf             # Nginx reverse proxy configuration
-│   ├── package.json           # Frontend dependencies & scripts
-│   ├── vite.config.js         # Vite configuration (proxies /api in local dev)
-│   ├── src/
-│   │   ├── components/        # UI components (Trading panels, OrderBooks, Charts)
-│   │   ├── hooks/             # Custom React hooks (tickers, candles, sockets)
-│   │   ├── lib/               # Shared libraries (Axios instance, WebSocket connection)
-│   │   ├── pages/             # Landing, log in, trade, dashboard, wallet, and admin pages
-│   │   └── store/             # Zustand global stores (authStore, marketStore, orderStore)
-└── server/
-    ├── Dockerfile             # Node server image packaging
-    ├── package.json           # Backend dependencies
-    ├── server.js              # Application entry point (initializes Express & WebSockets)
-    ├── config/                # Database connection and constant settings
-    ├── middleware/            # JWT auth, roles, and error handlers
-    ├── models/                # MongoDB Mongoose schemas (User, Order, Trade, Wallet, Transaction)
-    ├── routes/                # Express API routes (auth, market, orders, wallet, admin)
-    ├── services/              # Price feeds, matching engine, and socket services
-    └── utils/                 # OHLC candlestick generators and mock seed script
+**CryptoVault** is a real-time, zero-risk cryptocurrency exchange simulator. It replicates the core features of a production trading platform (matching engines, live order books, price feeds, and custom wallets) for educational and strategy-testing purposes. Users are provisioned with simulated capital (**10,000 USDT**) to practice trading top crypto pairs (BTCUSDT, ETHUSDT, SOLUSDT, and others) without any financial risk.
+
+---
+
+## 2. Technology Stack & Component Specifications
+
+The platform is designed using a decoupled Client-Server architecture separated by an Nginx reverse proxy.
+
+```
+                  ┌──────────────────────────────┐
+                  │        Public Clients        │
+                  │  (Browsers & Mobile Nodes)   │
+                  └──────────────┬───────────────┘
+                                 │ HTTP / WSS
+                                 ▼ (Port 80)
+                  ┌──────────────────────────────┐
+                  │    Docker Nginx Container    │
+                  │   (Static host + API Proxy)  │
+                  └─────┬──────────────────┬─────┘
+                        │                  │
+           Static Files │                  │ Proxy /api & /socket.io
+                        ▼                  ▼
+                  ┌──────────┐       ┌──────────┐
+                  │  Client  │       │  Server  │
+                  │ (React)  │       │ (NodeJS) │
+                  └──────────┘       └─────┬────┘
+                                           │ Mongoose (SSL)
+                                           ▼
+                                     ┌──────────┐
+                                     │ MongoDB  │
+                                     │  Atlas   │
+                                     └──────────┘
 ```
 
+### A. Client Side (Frontend)
+* **Core Engine**: React 18 with Vite compiler (bundling optimized ESModules in under 6 seconds).
+* **State & Memory Store**: Zustand store modules:
+  - `authStore`: Manages user credentials, JWT local storage caching, and socket connection cycles.
+  - `marketStore`: Maintains real-time ticks, daily changes, and OHLC data streams.
+  - `orderStore`: Handles user open orders, transaction logs, and history lists.
+* **UI styling**: TailwindCSS utility framework with dark-theme values (`#0B0E11` deep background, `#F0B90B` exchange gold accent, `#0ECB81` buy green, and `#F6465D` sell red).
+* **Interactive Charting**: Lightweight Charts library by TradingView, rendering multi-timeframe OHLC candles (`1m`, `5m`, `15m`, `1h`, `4h`, `1d`) dynamically.
+* **Network layer**: Axios instance configured with custom request interceptors that inject the `Authorization: Bearer <JWT>` header from localStorage.
+
+### B. Server Side (Backend)
+* **API Framework**: Node.js & Express.
+* **Real-time Gateway**: Socket.io (using WebSocket transport layer, supporting namespaces and room-joining).
+* **Order Engine Components**:
+  - `MatchingEngine`: A modular engine that processes order books. Bids and Asks are sorted and matched (Price/Time priority) upon placement.
+  - `PriceEngine`: Generates simulated market ticks and historical candlestick updates based on customized volatility indices.
+  - `MarketMaker`: Automatically places liquidity orders (bids/asks) into the order book to simulate real exchange trading volume.
+
 ---
 
-## 3. Operational Data Flow & User Journeys
+## 3. Database Architecture & Schema Specifications
+
+The database schema is mapped using Mongoose schemas connecting directly to MongoDB Atlas.
+
+### Database Entities & Fields
+
+```
+ ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+ │      User       │       │     Wallet      │       │   Transaction   │
+ ├─────────────────┤       ├─────────────────┤       ├─────────────────┤
+ │ _id             │◄─────┐│ _id             │◄─────┐│ _id             │
+ │ name            │      └│ userId          │      └│ userId          │
+ │ email           │       │ balances: {     │       │ type (DEPOSIT)  │
+ │ password        │       │   BTC: {        │       │ asset (USDT)    │
+ │ role            │       │     free        │       │ amount          │
+ │ createdAt       │       │     locked      │       │ reference       │
+ └─────────────────┘       │   }             │       └─────────────────┘
+                           │ }               │
+ ┌─────────────────┐       └─────────────────┘       ┌─────────────────┐
+ │      Order      │                                 │      Trade      │
+ ├─────────────────┤                                 ├─────────────────┤
+ │ _id             │◄───────────────────────────────┐│ _id             │
+ │ userId          │                                └│ buyOrderId      │
+ │ symbol          │◄───────────────────────────────┐│ sellOrderId     │
+ │ side (BUY/SELL) │                                └│ price           │
+ │ type (LIMIT)    │                                 │ quantity        │
+ │ status          │                                 │ executedAt      │
+ └─────────────────┘                                 └─────────────────┘
+```
+
+#### 1. User Schema (`User`)
+Stores account access details and permission roles.
+* `name` (String, Required): Full name of the user.
+* `email` (String, Unique, Required): Email address.
+* `password` (String, Required): Bcrypt-hashed password.
+* `role` (String, Default: `'trader'`): Account access role (`'trader'` or `'admin'`).
+
+#### 2. Wallet Schema (`Wallet`)
+Maintains current account balances for each asset.
+* `userId` (ObjectId, Ref: `'User'`, Unique): Owner relationship.
+* `balances` (Map of Objects): Keyed by asset token symbol (USDT, BTC, ETH, BNB, etc.):
+  - `free` (Number, Default: `0`): Spendable, tradeable asset balance.
+  - `locked` (Number, Default: `0`): Balances currently locked in active open orders.
+
+#### 3. Transaction Schema (`Transaction`)
+Records virtual cash flows (deposits/withdrawals).
+* `userId` (ObjectId, Ref: `'User'`): Target user.
+* `type` (String): `'DEPOSIT'` or `'WITHDRAWAL'`.
+* `asset` (String): Asset token symbol (e.g. `'USDT'`).
+* `amount` (Number): Transaction volume.
+* `balanceBefore` / `balanceAfter` (Number): Balance historical snapshots.
+
+#### 4. Order Schema (`Order`)
+Tracks trades placed on the platform.
+* `userId` (ObjectId, Ref: `'User'`): Placer ID.
+* `symbol` (String): Trading pair symbol (e.g. `'BTCUSDT'`).
+* `side` (String): `'BUY'` or `'SELL'`.
+* `type` (String): `'LIMIT'` or `'MARKET'`.
+* `price` (Number): Requested unit price.
+* `quantity` (Number): Order total size.
+* `filledQty` (Number, Default: `0`): Amount filled so far.
+* `status` (String): Current state (`'OPEN'`, `'PARTIALLY_FILLED'`, `'FILLED'`, `'CANCELLED'`).
+
+#### 5. Trade Schema (`Trade`)
+Records successful match executions between buy and sell orders.
+* `buyOrderId` / `sellOrderId` (ObjectId, Ref: `'Order'`): Associated orders.
+* `symbol` (String): Trading pair (e.g. `'BTCUSDT'`).
+* `price` (Number): Executed transaction price.
+* `quantity` (Number): Matched transaction volume.
+
+---
+
+## 4. WebSocket (Socket.io) Network Specifications
+
+Real-time, bidirectional streams handle live updates. The client initiates WebSocket connections with the following event payloads:
+
+### Inbound Events (Client to Server)
+1. `'join_user_room'` (Payload: `userId`): Connects user to a private channel for receiving individual order fill notifications.
+2. `'subscribe_ticker'` (Payload: `symbol`): Subscribes to 24h price change updates for a specific pair.
+3. `'subscribe_candles'` (Payload: `{ symbol, interval }`): Subscribes to real-time candlestick feeds.
+4. `'subscribe_orderbook'` (Payload: `symbol`): Subscribes to the live bid/ask order book.
+
+### Outbound Events (Server to Client)
+1. `'ticker'` (Payload: Ticker object): Live price ticks, 24h highs, lows, and percentage changes.
+2. `'candle'` (Payload: Candle object): Real-time updates of the current open candlestick.
+3. `'orderbook'` (Payload: Orderbook object): Depth updates (top 15 bids and asks).
+4. `'order_filled'` (Payload: Trade event object): Notifies the user when an order has been successfully matched.
+
+---
+
+## 5. Flowcharts
 
 ### A. Data Flow (Order Placement & Matching)
 ```mermaid
@@ -114,9 +204,9 @@ graph TD
 
 ---
 
-## 4. Cloud Architecture Diagrams
+## 6. Cloud Architecture Diagrams
 
-Here are the visual architecture configurations deployed on your single AWS EC2 instance:
+Below are the architectural diagrams deployed on your AWS EC2 instance:
 
 ### A. High-Fidelity Diagram
 ![CryptoVault Single-Instance EC2 Cloud Architecture Diagram](/Users/sourabhyadav/.gemini/antigravity-ide/brain/004e9116-6931-4641-bcc5-83b9cbeffc9f/cloud_architecture_diagram_1781448125606.png)
@@ -126,36 +216,67 @@ Here are the visual architecture configurations deployed on your single AWS EC2 
 
 ---
 
-## 5. Setup & Deployment Commands
+## 7. Security Hardening & Admin Protocol
 
-Here is the exact checklist of commands used to deploy the platform on your EC2 instance (`54.197.10.99`):
+### systemd Daemon Config
+To ensure Docker and network services are started on host boot:
+```bash
+sudo systemctl enable docker.service
+sudo systemctl enable containerd.service
+```
 
-### Phase 1: Local Machine Tasks
-1. Set SSH permissions:
+### UFW firewall Rules
+Only open SSH and HTTP/HTTPS ports to the public:
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 22/tcp comment 'Secure SSH'
+sudo ufw allow 80/tcp comment 'HTTP Web traffic'
+sudo ufw enable
+```
+
+### Fail2ban Brute-Force Shield (`/etc/fail2ban/jail.local`)
+Prevents SSH brute-force scans:
+```ini
+[sshd]
+enabled = true
+port = 22
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 5
+bantime = 3600
+```
+
+---
+
+## 8. Setup & Deployment Commands
+
+### Phase 1: Local Machine Tasks (Vite compilation & SCP)
+1. Apply correct SSH key permissions:
    ```bash
    chmod 400 cryptovault.pem
    ```
-2. Build the Vite client project locally to offload compilation from the EC2 instance's RAM:
+2. Build the client locally on your fast Mac:
    ```bash
    cd client
    npm run build
    cd ..
    ```
-3. Archive the project codebase:
+3. Compress files into a tar archive:
    ```bash
    tar -czf archive.tar.gz --exclude="node_modules" --exclude=".git" --exclude="archive.tar.gz" -C . .
    ```
-4. Transfer the archive to the EC2 server:
+4. Transfer the file to the EC2 server:
    ```bash
    scp -i cryptovault.pem archive.tar.gz ubuntu@54.197.10.99:/home/ubuntu/
    ```
 
-### Phase 2: Remote Server Tasks (First-time Setup)
+### Phase 2: Remote Server Setup
 1. SSH into the instance:
    ```bash
    ssh -i cryptovault.pem ubuntu@54.197.10.99
    ```
-2. Run clean install commands for Docker Engine:
+2. Run installation script for Docker Engine:
    ```bash
    # Remove any broken docker package lists
    sudo rm -f /etc/apt/sources.list.d/docker.list
@@ -170,7 +291,7 @@ Here is the exact checklist of commands used to deploy the platform on your EC2 
    ```
    *Logout and log back in to apply group changes.*
 
-### Phase 3: Application Run Tasks
+### Phase 3: Application Launch
 1. Extract the uploaded tar archive:
    ```bash
    mkdir -p ~/CryptoVault
@@ -190,7 +311,7 @@ Here is the exact checklist of commands used to deploy the platform on your EC2 
 
 ---
 
-## 6. Pricing & Financial Analysis
+## 9. Pricing & Financial Analysis
 
 ### A. Business Model Canvas (BMC) Highlights
 * **Value Proposition**: Risk-free simulation sandbox with real-time order book execution logic.
