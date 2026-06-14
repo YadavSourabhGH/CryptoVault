@@ -112,49 +112,13 @@ Real-time, bidirectional streams handle live updates. The client initiates WebSo
 
 ---
 
-## 5. Flowcharts
+## 5. Flowcharts & Process Visualizations
 
 ### A. Data Flow (Order Placement & Matching)
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as Client Browser
-    participant Nginx as Client Nginx
-    participant API as Node Express Server
-    participant Engine as Matching Engine
-    participant DB as MongoDB Atlas
-    participant Socket as Socket.io Service
-
-    User->>Nginx: HTTP POST /api/orders (Limit Buy BTC)
-    Nginx->>API: Proxy to Node (Port 4000)
-    API->>DB: Lock USDT Balance in User's Wallet
-    API->>Engine: Process Order inside Matching Engine
-    Note over Engine: Check order book for matching Ask orders
-    Engine->>DB: Save Executed Trades & Update User Balances
-    Engine->>Socket: Emit order status updates
-    Socket->>User: Push 'order_filled' or 'order_update' event via WebSockets
-```
+![CryptoVault Order Placement & Matching Flow](docs/assets/sequence_diagram.png)
 
 ### B. User Journey Flow
-```mermaid
-graph TD
-    Start([User enters Site]) --> Landing[Landing Page / Markets Preview]
-    Landing --> AuthCheck{Has Account?}
-    AuthCheck -->|No| Register[Register Page]
-    AuthCheck -->|Yes| Login[Log In / One-Click Demo Account]
-    Register --> Login
-    Login --> Dashboard[Main Trade Dashboard]
-    
-    subgraph Core Features
-        Dashboard --> Trade[Trade View: Place Orders / View Candles]
-        Dashboard --> Wallet[Wallet View: View Balances / Virtual Deposits]
-        Dashboard --> History[Order History / Performance Logs]
-    end
-
-    subgraph Admin Functions
-        Dashboard -->|If Admin Role| Admin[Admin Panel: Monitor Platform Statistics]
-    end
-```
+![CryptoVault User Journey Flow](docs/assets/user_flow.png)
 
 ---
 
