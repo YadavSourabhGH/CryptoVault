@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useMarketStore } from '../store/marketStore';
 import { useSocket } from '../hooks/useSocket';
 import { formatPrice, formatVolume } from '../lib/utils';
